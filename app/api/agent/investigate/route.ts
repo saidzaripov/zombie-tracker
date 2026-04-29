@@ -2,7 +2,6 @@ import { NextRequest } from 'next/server';
 import { getZombies } from '@/lib/queries';
 import { getAnthropic, MODEL } from '@/lib/anthropic';
 import { cached } from '@/lib/cache';
-import { q } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -31,58 +30,29 @@ export async function GET(_req: NextRequest) {
 
   const candidates = await cached('agent:candidates', 600, () => getZombies({ limit: 30 }));
 
-  // Enrich each candidate with its top grant for narrative-grounding.
-  // Cached aggressively — same query for the same slate.
-  const enriched = await cached('agent:enriched', 600, async () => {
-    return Promise.all(
-      candidates.map(async (z) => {
-        const topGrant = await q<any>(
-          `
-          SELECT 'FED'::text AS source, g.agreement_value::numeric AS amount,
-                 g.agreement_start_date::text AS date,
-                 g.owner_org_title AS department,
-                 COALESCE(g.agreement_title_en, g.prog_name_en) AS purpose
-          FROM general.entity_source_links esl
-          JOIN fed.grants_contributions g ON g._id = (esl.source_pk->>'_id')::bigint
-          WHERE esl.entity_id = $1 AND esl.source_schema = 'fed'
-            AND esl.source_table = 'grants_contributions'
-            AND g.agreement_value > 0
-          ORDER BY g.agreement_value DESC LIMIT 1
-          UNION ALL
-          SELECT 'AB'::text AS source, g.amount::numeric AS amount,
-                 g.payment_date::text AS date, g.ministry AS department,
-                 g.program AS purpose
-          FROM general.entity_source_links esl
-          JOIN ab.ab_grants g ON g.id = (esl.source_pk->>'id')::int
-          WHERE esl.entity_id = $1 AND esl.source_schema = 'ab'
-            AND esl.source_table = 'ab_grants' AND g.amount > 0
-          ORDER BY g.amount DESC LIMIT 1
-          `,
-          [z.entity_id]
-        ).catch(() => []);
-        return {
-          entity_id: z.entity_id,
-          name: z.canonical_name,
-          province: z.province,
-          total_funding: Math.round(z.total_funding),
-          fed_total: Math.round(z.fed_total),
-          ab_total: Math.round(z.ab_total),
-          cra_govt_share_pct: z.cra_govt_share_pct,
-          cra_latest_year: z.cra_latest_year,
-          fed_latest_grant: z.fed_latest_grant,
-          ab_registry_status: z.ab_status,
-          signal_label: z.signal_label,
-          top_grants: topGrant.map((g: any) => ({
-            source: g.source,
-            amount: Number(g.amount),
-            date: g.date,
-            department: g.department,
-            purpose: g.purpose,
-          })),
-        };
-      })
-    );
-  });
+  // Compact slate — just the comparable signals. Skips per-candidate grant
+  // detail to stay within Vercel's 60s function budget on cold start; the
+  // model still picks autonomously from these 11 fields per candidate.
+  const enriched = candidates.map((z) => ({
+    entity_id: z.entity_id,
+    name: z.canonical_name,
+    province: z.province,
+    total_funding: Math.round(z.total_funding),
+    fed_total: Math.round(z.fed_total),
+    ab_total: Math.round(z.ab_total),
+    cra_govt_share_pct: z.cra_govt_share_pct,
+    cra_latest_year: z.cra_latest_year,
+    fed_latest_grant: z.fed_latest_grant,
+    ab_registry_status: z.ab_status,
+    signal_label: z.signal_label,
+    top_grants: [] as Array<{
+      source: string;
+      amount: number;
+      date: string | null;
+      department: string | null;
+      purpose: string | null;
+    }>,
+  }));
 
   const candidateById = new Map(enriched.map((c) => [c.entity_id, c]));
 
