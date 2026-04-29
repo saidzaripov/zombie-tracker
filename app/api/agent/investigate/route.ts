@@ -1,12 +1,9 @@
 import { NextRequest } from 'next/server';
-import { getZombies } from '@/lib/queries';
 import { getAnthropic, MODEL } from '@/lib/anthropic';
-import { cached } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 export const maxDuration = 60;
-const CANDIDATE_LIMIT = 8;
 
 /**
  * Autonomous-investigator endpoint.
@@ -21,7 +18,7 @@ const CANDIDATE_LIMIT = 8;
  * The selection logic is NOT pre-coded. The model autonomously identifies
  * the most newsworthy case and writes the case in one pass.
  */
-export async function GET(_req: NextRequest) {
+export async function POST(req: NextRequest) {
   let anthropic;
   try {
     anthropic = getAnthropic();
@@ -29,25 +26,30 @@ export async function GET(_req: NextRequest) {
     return new Response(`Anthropic key missing: ${e.message}`, { status: 500 });
   }
 
-  const candidates = await cached(`agent:candidates:${CANDIDATE_LIMIT}`, 600, () =>
-    getZombies({ limit: CANDIDATE_LIMIT })
-  );
+  let body: { candidates?: any[] };
+  try {
+    body = await req.json();
+  } catch {
+    return new Response('invalid json body', { status: 400 });
+  }
 
-  // Compact slate — just the comparable signals. Skips per-candidate grant
-  // detail to stay within Vercel's 60s function budget on cold start; the
-  // model still picks autonomously from these 11 fields per candidate.
-  const enriched = candidates.map((z) => ({
-    entity_id: z.entity_id,
-    name: z.canonical_name,
-    province: z.province,
-    total_funding: Math.round(z.total_funding),
-    fed_total: Math.round(z.fed_total),
-    ab_total: Math.round(z.ab_total),
-    cra_govt_share_pct: z.cra_govt_share_pct,
-    cra_latest_year: z.cra_latest_year,
-    fed_latest_grant: z.fed_latest_grant,
-    ab_registry_status: z.ab_status,
-    signal_label: z.signal_label,
+  if (!body.candidates || !Array.isArray(body.candidates) || body.candidates.length === 0) {
+    return new Response('candidates array required', { status: 400 });
+  }
+
+  // Trim and sanitize the slate — keep only the fields the model needs.
+  const enriched = body.candidates.slice(0, 12).map((c: any) => ({
+    entity_id: c.entity_id,
+    name: c.canonical_name ?? c.name,
+    province: c.province ?? null,
+    total_funding: Math.round(Number(c.total_funding) || 0),
+    fed_total: Math.round(Number(c.fed_total) || 0),
+    ab_total: Math.round(Number(c.ab_total) || 0),
+    cra_govt_share_pct: c.cra_govt_share_pct ?? null,
+    cra_latest_year: c.cra_latest_year ?? null,
+    fed_latest_grant: c.fed_latest_grant ?? null,
+    ab_registry_status: c.ab_status ?? c.ab_registry_status ?? null,
+    signal_label: c.signal_label ?? null,
     top_grants: [] as Array<{
       source: string;
       amount: number;
