@@ -68,27 +68,7 @@ function AgentInner({ onClose }: { onClose: () => void }) {
     const ctrl = new AbortController();
     (async () => {
       try {
-        // 1) Fetch the candidate slate (cached server-side after first hit)
-        const slateRes = await fetch(`/api/zombies?limit=12`, { signal: ctrl.signal });
-        if (!slateRes.ok) {
-          setError(`Failed to load candidates: ${slateRes.status}`);
-          setStreaming(false);
-          return;
-        }
-        const slate = await slateRes.json();
-        if (slate.error) {
-          setError(slate.error);
-          setStreaming(false);
-          return;
-        }
-
-        // 2) POST candidates to the agent endpoint, which only calls the LLM
-        const res = await fetch(`/api/agent/investigate`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ candidates: slate.zombies ?? [] }),
-          signal: ctrl.signal,
-        });
+        const res = await fetch(`/api/agent/investigate`, { signal: ctrl.signal });
         if (!res.ok || !res.body) {
           setError(await res.text());
           setStreaming(false);

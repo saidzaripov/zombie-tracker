@@ -10,7 +10,12 @@ export const pool =
   new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false },
-    max: 5,
+    max: 3,
+    idleTimeoutMillis: 30_000,
+    connectionTimeoutMillis: 8_000,
+    keepAlive: true,
+    statement_timeout: 25_000,
+    query_timeout: 25_000,
   });
 
 if (process.env.NODE_ENV !== 'production') global.__pgPool = pool;

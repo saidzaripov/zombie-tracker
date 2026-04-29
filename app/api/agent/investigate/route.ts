@@ -6,19 +6,141 @@ export const runtime = 'nodejs';
 export const maxDuration = 60;
 
 /**
+ * Build-time slate snapshot.
+ *
+ * Why static: the hackathon's shared `general.vw_entity_funding` is
+ * unmaterialized and recomputed per query. Under hackathon-day load it
+ * spikes to 4+ minute response times — far past Vercel's 60s function
+ * limit. Baking the slate at deploy time keeps the agent endpoint pure
+ * LLM (no DB roundtrip), so the autonomous-selection demo works
+ * regardless of upstream DB load.
+ *
+ * Refreshed: 2026-04-29 morning. Same 8 entries the live query returns
+ * for getZombies({ limit: 8 }) when the DB isn't overloaded.
+ */
+const SNAPSHOT_DATE = '2026-04-29';
+
+const STATIC_SLATE = [
+  {
+    entity_id: 20310,
+    name: "St. Stephen's Community House",
+    province: 'ON',
+    total_funding: 115216386,
+    fed_total: 94356807,
+    ab_total: 0,
+    cra_govt_share_pct: 73.84,
+    cra_latest_year: 2020,
+    fed_latest_grant: '2022-04-01',
+    ab_registry_status: null,
+    signal_label: '74% public revenue · last T3010 2020',
+  },
+  {
+    entity_id: 82976,
+    name: 'Northwest Inter-Nation Family and Community Services Society',
+    province: 'BC',
+    total_funding: 114368003,
+    fed_total: 101785257,
+    ab_total: 0,
+    cra_govt_share_pct: 100,
+    cra_latest_year: 2021,
+    fed_latest_grant: '2021-04-01',
+    ab_registry_status: null,
+    signal_label: '100% public revenue · last T3010 2021',
+  },
+  {
+    entity_id: 66857,
+    name: 'TRILLIUM GIFT OF LIFE NETWORK',
+    province: 'ON',
+    total_funding: 108687937,
+    fed_total: 172401,
+    ab_total: 0,
+    cra_govt_share_pct: 100,
+    cra_latest_year: 2021,
+    fed_latest_grant: '2019-10-07',
+    ab_registry_status: null,
+    signal_label: '100% public revenue · last T3010 2021',
+  },
+  {
+    entity_id: 35730,
+    name: 'ADDICTIONS FOUNDATION OF MANITOBA',
+    province: 'MB',
+    total_funding: 107567019,
+    fed_total: 1000,
+    ab_total: 0,
+    cra_govt_share_pct: 94,
+    cra_latest_year: 2022,
+    fed_latest_grant: '2019-08-27',
+    ab_registry_status: null,
+    signal_label: '94% public revenue · last T3010 2022',
+  },
+  {
+    entity_id: 25461,
+    name: 'CANADIAN MENTAL HEALTH ASSOCIATION, THAMES VALLEY ADDICTION & MENTAL HEALTH SERVICES',
+    province: 'ON',
+    total_funding: 63879195,
+    fed_total: 289758,
+    ab_total: 0,
+    cra_govt_share_pct: 80,
+    cra_latest_year: 2021,
+    fed_latest_grant: '2022-04-25',
+    ab_registry_status: null,
+    signal_label: '80% public revenue · last T3010 2021',
+  },
+  {
+    entity_id: 22019,
+    name: 'UNITED WAY CENTRAL AND NORTHERN VANCOUVER ISLAND',
+    province: 'BC',
+    total_funding: 60777654,
+    fed_total: 100000,
+    ab_total: 0,
+    cra_govt_share_pct: 81,
+    cra_latest_year: 2021,
+    fed_latest_grant: '2021-04-26',
+    ab_registry_status: null,
+    signal_label: '81% public revenue · last T3010 2021',
+  },
+  {
+    entity_id: 81561,
+    name: 'ABILITY SOCIETY OF ALBERTA',
+    province: 'AB',
+    total_funding: 27904744,
+    fed_total: 1500,
+    ab_total: 21165568,
+    cra_govt_share_pct: null,
+    cra_latest_year: 2021,
+    fed_latest_grant: '2007-11-05',
+    ab_registry_status: 'Struck',
+    signal_label: 'Struck from Alberta registry',
+  },
+  {
+    entity_id: 53984,
+    name: 'The Brenda Strafford Society for the Prevention of Domestic Violence',
+    province: 'AB',
+    total_funding: 18860087,
+    fed_total: 180957,
+    ab_total: 9503269,
+    cra_govt_share_pct: 59.91,
+    cra_latest_year: 2021,
+    fed_latest_grant: '2022-04-25',
+    ab_registry_status: 'Dissolved',
+    signal_label: 'Dissolved (Alberta registry)',
+  },
+];
+
+/**
  * Autonomous-investigator endpoint.
  *
- * Single streaming call: the model receives a slate of 30 candidate zombies
- * (with their accountability signals AND top 2 grants for context) and must:
+ * One streaming Claude call: the model receives the slate and must
  *   1) Pick ONE — emit <selection>{...}</selection>
  *   2) Justify the pick — emit <reasoning>...</reasoning>
  *   3) Write the forensic narrative — emit <narrative>...</narrative>
  *   4) List red flags — emit <red_flags>...</red_flags>
  *
- * The selection logic is NOT pre-coded. The model autonomously identifies
- * the most newsworthy case and writes the case in one pass.
+ * Selection logic is NOT pre-coded. The data layer applies the deterministic
+ * "ceased operations" filter; the model decides which case is the most
+ * teachable accountability story and writes the case in one pass.
  */
-export async function POST(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   let anthropic;
   try {
     anthropic = getAnthropic();
@@ -26,30 +148,8 @@ export async function POST(req: NextRequest) {
     return new Response(`Anthropic key missing: ${e.message}`, { status: 500 });
   }
 
-  let body: { candidates?: any[] };
-  try {
-    body = await req.json();
-  } catch {
-    return new Response('invalid json body', { status: 400 });
-  }
-
-  if (!body.candidates || !Array.isArray(body.candidates) || body.candidates.length === 0) {
-    return new Response('candidates array required', { status: 400 });
-  }
-
-  // Trim and sanitize the slate — keep only the fields the model needs.
-  const enriched = body.candidates.slice(0, 12).map((c: any) => ({
-    entity_id: c.entity_id,
-    name: c.canonical_name ?? c.name,
-    province: c.province ?? null,
-    total_funding: Math.round(Number(c.total_funding) || 0),
-    fed_total: Math.round(Number(c.fed_total) || 0),
-    ab_total: Math.round(Number(c.ab_total) || 0),
-    cra_govt_share_pct: c.cra_govt_share_pct ?? null,
-    cra_latest_year: c.cra_latest_year ?? null,
-    fed_latest_grant: c.fed_latest_grant ?? null,
-    ab_registry_status: c.ab_status ?? c.ab_registry_status ?? null,
-    signal_label: c.signal_label ?? null,
+  const enriched = STATIC_SLATE.map((s) => ({
+    ...s,
     top_grants: [] as Array<{
       source: string;
       amount: number;
@@ -68,16 +168,15 @@ export async function POST(req: NextRequest) {
         controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
       };
 
-      // Heartbeat so curl/proxies see bytes immediately
-      send('start', { candidates: enriched.length });
+      send('start', { candidates: enriched.length, snapshot_date: SNAPSHOT_DATE });
 
       try {
         const llmStream = anthropic.messages.stream({
           model: 'claude-haiku-4-5-20251001',
-          max_tokens: 750,
+          max_tokens: 800,
           system: `You are an autonomous accountability investigator for Canadian taxpayers, in CBC investigative-journalism voice.
 
-You will be given a slate of ${enriched.length} candidate organizations from open Canadian government data, each flagged as a "zombie recipient" (received public funding then ceased meaningful operations). For each candidate you receive: name, province, total public funding, federal and Alberta totals, CRA government-revenue share, last filed T3010 year, most recent federal grant date, Alberta registry status, the deterministic signal label, and (where available) the largest single grant on record.
+You will be given a slate of ${enriched.length} candidate organizations from open Canadian government data, each flagged as a "zombie recipient" (received public funding then ceased meaningful operations). For each candidate you receive: name, province, total public funding, federal and Alberta totals, CRA government-revenue share, last filed T3010 year, most recent federal grant date, Alberta registry status, the deterministic signal label.
 
 You must do four things, in order:
 
@@ -130,7 +229,6 @@ You must do four things, in order:
             const delta = event.delta.text;
             buffer += delta;
 
-            // As soon as we see </selection>, parse it and emit a selection event
             if (!selectionEmitted) {
               const m = buffer.match(/<selection>([\s\S]*?)<\/selection>/);
               if (m) {
@@ -146,12 +244,11 @@ You must do four things, in order:
                     selectionEmitted = true;
                   }
                 } catch {
-                  // Will retry on next delta
+                  /* will retry on next delta */
                 }
               }
             }
 
-            // Always forward delta tokens for the live narrative typewriter
             send('delta', { text: delta });
           }
         }
