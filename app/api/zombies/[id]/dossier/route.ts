@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDossier } from '@/lib/queries';
 import { cached } from '@/lib/cache';
+import { BAKED_DOSSIERS } from '@/lib/baked';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -16,10 +17,16 @@ export async function GET(
   }
   try {
     const dossier = await cached(`dossier:${entityId}`, 600, () => getDossier(entityId));
-    if (!dossier) return NextResponse.json({ error: 'not found' }, { status: 404 });
-    return NextResponse.json(dossier);
+    if (!dossier) {
+      const baked = BAKED_DOSSIERS[entityId];
+      if (baked) return NextResponse.json({ ...baked, src: 'snapshot' });
+      return NextResponse.json({ error: 'not found' }, { status: 404 });
+    }
+    return NextResponse.json({ ...dossier, src: 'live' });
   } catch (e: any) {
-    console.error('GET /api/zombies/[id]/dossier failed:', e);
+    console.error(`GET /api/zombies/${entityId}/dossier — falling back:`, e.message);
+    const baked = BAKED_DOSSIERS[entityId];
+    if (baked) return NextResponse.json({ ...baked, src: 'snapshot' });
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }

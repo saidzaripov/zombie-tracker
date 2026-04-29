@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { getDossier } from '@/lib/queries';
 import { getAnthropic, MODEL, DOSSIER_SYSTEM_PROMPT } from '@/lib/anthropic';
+import { BAKED_DOSSIERS } from '@/lib/baked';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -15,7 +16,15 @@ export async function GET(
     return new Response('invalid id', { status: 400 });
   }
 
-  const dossier = await getDossier(entityId);
+  let dossier;
+  try {
+    dossier = await getDossier(entityId);
+  } catch (e) {
+    dossier = null;
+  }
+  if (!dossier) {
+    dossier = BAKED_DOSSIERS[entityId] ?? null;
+  }
   if (!dossier) return new Response('not found', { status: 404 });
 
   let anthropic;
