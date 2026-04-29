@@ -39,7 +39,8 @@ export function ZombieCard({
       exit={{ opacity: 0 }}
       transition={{ duration: 0.18, ease: 'easeOut' }}
       onClick={onClick}
-      className="w-full text-left bg-zombie-card border border-zombie-border rounded-xl p-4 active:scale-[0.99] transition-transform"
+      data-signal={zombie.signal ?? ''}
+      className="zt-card w-full text-left p-4"
     >
       <div className="flex items-start gap-3">
         <Monogram name={zombie.canonical_name} />
@@ -49,7 +50,7 @@ export function ZombieCard({
               <div className="text-[10px] uppercase tracking-wider text-zombie-muted font-mono">
                 #{rank}
               </div>
-              <h3 className="text-base font-semibold text-white leading-snug line-clamp-2">
+              <h3 className="text-base font-semibold text-zombie-fg leading-snug line-clamp-2">
                 {zombie.canonical_name}
               </h3>
             </div>
@@ -59,7 +60,7 @@ export function ZombieCard({
       </div>
 
       <div className="flex items-baseline gap-2 mt-3">
-        <span className="text-2xl font-bold tabular-nums">
+        <span className="text-2xl font-bold tabular-nums text-zombie-fg">
           {formatMoney(zombie.total_funding, { compact: true })}
         </span>
         <span className="text-xs text-zombie-muted">total public funding</span>

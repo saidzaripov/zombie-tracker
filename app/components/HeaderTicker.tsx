@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { Skull, Info } from 'lucide-react';
 import { formatMoney } from '../lib-client/format';
+import { ThemeToggle } from './ThemeToggle';
 
 export function HeaderTicker({ onAbout }: { onAbout: () => void }) {
   const [total, setTotal] = useState<number | null>(null);
@@ -53,21 +54,24 @@ export function HeaderTicker({ onAbout }: { onAbout: () => void }) {
               />
               <span className="absolute -top-0.5 -right-0.5 inline-block w-1.5 h-1.5 rounded-full bg-zombie-accent pulse-red" />
             </div>
-            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-white">
+            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-zombie-fg">
               Zombie Tracker
             </span>
             <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-fuchsia-400/80 ml-1 px-1.5 py-0.5 rounded border border-fuchsia-500/30 bg-fuchsia-500/5">
               AI
             </span>
           </div>
-          <button
-            onClick={onAbout}
-            aria-label="How this works"
-            className="flex items-center gap-1 text-[11px] text-zombie-muted hover:text-white px-2 py-1 -mr-2 rounded-md"
-          >
-            <Info size={12} />
-            <span>How it works</span>
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={onAbout}
+              aria-label="How this works"
+              className="flex items-center gap-1 text-[11px] text-zombie-muted hover:text-zombie-fg px-2 py-1 rounded-md"
+            >
+              <Info size={12} />
+              <span>How it works</span>
+            </button>
+            <ThemeToggle />
+          </div>
         </div>
 
         {/* hero */}
@@ -75,7 +79,7 @@ export function HeaderTicker({ onAbout }: { onAbout: () => void }) {
           <div className="text-[10px] uppercase tracking-[0.18em] text-zombie-muted mb-1.5">
             Public dollars to Canadian charities that went silent
           </div>
-          <div className="text-[44px] sm:text-[52px] leading-none font-bold tabular-nums text-white">
+          <div className="text-[44px] sm:text-[52px] leading-none font-bold tabular-nums text-zombie-fg">
             {total == null ? (
               <span className="inline-block w-56 h-12 rounded shimmer" />
             ) : (

@@ -51,7 +51,11 @@ export function ZombieFeed() {
         }
       });
     return () => ctrl.abort();
-  }, [filter]);
+    // Only re-fetch when params that actually affect the API call change.
+    // Signal filter is applied client-side, so excluding it avoids a
+    // slow round-trip on chip taps.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter.source, filter.province, filter.minFunding]);
 
   // Reset to page 1 when search changes
   useEffect(() => {

@@ -2,11 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { color-scheme: dark; }
+/* Default = dark theme */
+:root,
+:root[data-theme='dark'] {
+  --zt-bg: 10 10 10;
+  --zt-card: 22 22 22;
+  --zt-border: 38 38 38;
+  --zt-muted: 115 115 115;
+  --zt-fg: 245 245 245;
+  color-scheme: dark;
+}
 
-html, body {
-  background: #0a0a0a;
-  color: #f5f5f5;
+:root[data-theme='light'] {
+  --zt-bg: 250 250 250;
+  --zt-card: 255 255 255;
+  --zt-border: 229 229 229;
+  --zt-muted: 100 100 100;
+  --zt-fg: 23 23 23;
+  color-scheme: light;
+}
+
+html,
+body {
+  background: rgb(var(--zt-bg));
+  color: rgb(var(--zt-fg));
   -webkit-font-smoothing: antialiased;
   font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
   overscroll-behavior-y: none;
@@ -16,25 +35,80 @@ body {
   min-height: 100dvh;
 }
 
-* { -webkit-tap-highlight-color: transparent; }
+* {
+  -webkit-tap-highlight-color: transparent;
+}
 
-/* hide horizontal scrollbar on chip row */
-.no-scrollbar::-webkit-scrollbar { display: none; }
-.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+/* Hide horizontal scrollbar on chip row */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
 
 @keyframes pulse-red {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.55; }
 }
-.pulse-red { animation: pulse-red 1.4s ease-in-out infinite; }
+.pulse-red {
+  animation: pulse-red 1.4s ease-in-out infinite;
+}
 
-/* shimmering placeholder */
+/* Shimmering placeholder — adapts to theme via vars */
 @keyframes shimmer {
   0% { background-position: -400px 0; }
   100% { background-position: 400px 0; }
 }
 .shimmer {
-  background: linear-gradient(90deg, #1a1a1a 0%, #262626 40%, #1a1a1a 80%);
+  background: linear-gradient(
+    90deg,
+    rgb(var(--zt-card)) 0%,
+    rgb(var(--zt-border)) 40%,
+    rgb(var(--zt-card)) 80%
+  );
   background-size: 800px 100%;
   animation: shimmer 1.6s linear infinite;
 }
+
+/* Vivid card — subtle 1px inset highlight + signal-color accent stripe */
+.zt-card {
+  position: relative;
+  background-color: rgb(var(--zt-card));
+  border: 1px solid rgb(var(--zt-border));
+  border-radius: 0.75rem;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.04),
+    0 1px 0 rgb(0 0 0 / 0.2);
+  transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+:root[data-theme='light'] .zt-card {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.6),
+    0 1px 2px rgb(0 0 0 / 0.04),
+    0 1px 8px rgb(0 0 0 / 0.04);
+}
+.zt-card:active {
+  transform: scale(0.99);
+  border-color: rgb(var(--zt-muted) / 0.6);
+}
+.zt-card[data-signal='ab_dissolved']::before,
+.zt-card[data-signal='ab_struck']::before,
+.zt-card[data-signal='ab_cancelled']::before,
+.zt-card[data-signal='stopped_filing']::before,
+.zt-card[data-signal='high_govt_dependency']::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-top-left-radius: 0.75rem;
+  border-bottom-left-radius: 0.75rem;
+}
+.zt-card[data-signal='ab_dissolved']::before { background: #ef4444; }
+.zt-card[data-signal='ab_struck']::before { background: #f97316; }
+.zt-card[data-signal='ab_cancelled']::before { background: #f59e0b; }
+.zt-card[data-signal='stopped_filing']::before { background: #d946ef; }
+.zt-card[data-signal='high_govt_dependency']::before { background: #eab308; }
