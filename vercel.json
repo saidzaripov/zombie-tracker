@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "regions": ["iad1"],
+  "functions": {
+    "app/api/zombies/route.ts": { "maxDuration": 60 },
+    "app/api/totals/route.ts": { "maxDuration": 60 },
+    "app/api/zombies/[id]/dossier/route.ts": { "maxDuration": 30 },
+    "app/api/zombies/[id]/narrative/route.ts": { "maxDuration": 60 }
+  }
+}

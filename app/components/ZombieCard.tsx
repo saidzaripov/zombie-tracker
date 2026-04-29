@@ -1,0 +1,85 @@
+'use client';
+import { motion } from 'framer-motion';
+import { ChevronRight, Skull } from 'lucide-react';
+import type { Zombie } from '@/lib/types';
+import { formatMoney } from '../lib-client/format';
+
+const SIGNAL_COLORS: Record<string, string> = {
+  ab_dissolved: 'bg-red-500/15 text-red-400 border-red-500/30',
+  ab_struck: 'bg-orange-500/15 text-orange-400 border-orange-500/30',
+  ab_cancelled: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
+  stopped_filing: 'bg-fuchsia-500/15 text-fuchsia-400 border-fuchsia-500/30',
+  high_govt_dependency: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30',
+};
+
+export function ZombieCard({
+  zombie,
+  rank,
+  onClick,
+}: {
+  zombie: Zombie;
+  rank: number;
+  onClick: () => void;
+}) {
+  const sources: string[] = [];
+  if (zombie.fed_total > 0) sources.push('Federal');
+  if (zombie.ab_total > 0) sources.push('Alberta');
+
+  const signalClass =
+    SIGNAL_COLORS[zombie.signal ?? ''] ??
+    'bg-zombie-border text-zombie-muted border-zombie-border';
+
+  return (
+    <motion.button
+      layout
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.18, ease: 'easeOut' }}
+      onClick={onClick}
+      className="w-full text-left bg-zombie-card border border-zombie-border rounded-xl p-4 active:scale-[0.99] transition-transform"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-baseline gap-2 min-w-0">
+          <span className="text-zombie-muted text-xs tabular-nums w-6 shrink-0">#{rank}</span>
+          <h3 className="text-base font-semibold text-white leading-snug line-clamp-2">
+            {zombie.canonical_name}
+          </h3>
+        </div>
+        <ChevronRight className="text-zombie-muted shrink-0 mt-0.5" size={18} />
+      </div>
+
+      <div className="flex items-baseline gap-2 mt-3">
+        <span className="text-2xl font-bold tabular-nums">
+          {formatMoney(zombie.total_funding, { compact: true })}
+        </span>
+        <span className="text-xs text-zombie-muted">total public funding</span>
+      </div>
+
+      <div className="flex flex-wrap gap-1.5 mt-3">
+        <span className={`text-[11px] px-2 py-0.5 rounded-full border ${signalClass}`}>
+          <Skull size={10} className="inline mr-1 -mt-0.5" />
+          {zombie.signal_label}
+        </span>
+        {zombie.province && (
+          <span className="text-[11px] px-2 py-0.5 rounded-full border border-zombie-border text-zombie-muted">
+            {zombie.province}
+          </span>
+        )}
+        {sources.map((s) => (
+          <span
+            key={s}
+            className="text-[11px] px-2 py-0.5 rounded-full border border-zombie-border text-zombie-muted"
+          >
+            {s}
+          </span>
+        ))}
+        {zombie.cra_govt_share_pct != null && zombie.cra_govt_share_pct >= 50 && (
+          <span className="text-[11px] px-2 py-0.5 rounded-full border border-yellow-500/30 text-yellow-400 bg-yellow-500/10">
+            {Math.round(zombie.cra_govt_share_pct)}% public revenue
+          </span>
+        )}
+      </div>
+    </motion.button>
+  );
+}
