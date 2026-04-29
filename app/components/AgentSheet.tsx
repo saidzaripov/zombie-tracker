@@ -141,7 +141,7 @@ function AgentInner({ onClose }: { onClose: () => void }) {
               <Sparkles size={12} /> Autonomous Investigation
             </div>
             <h2 className="text-lg font-semibold text-white truncate">
-              {selection ? selection.candidate.name : 'AI is reviewing 30 candidates…'}
+              {selection ? selection.candidate.name : 'AI is reviewing candidates…'}
             </h2>
           </div>
           <button
@@ -250,7 +250,7 @@ function ReviewingState() {
       <div className="bg-fuchsia-500/10 border border-fuchsia-500/30 rounded-xl p-4">
         <div className="flex items-center gap-2 text-fuchsia-300 text-sm font-semibold mb-2">
           <Sparkles size={14} className="animate-pulse" />
-          AI is reviewing 30 candidate organizations…
+          AI is reviewing candidate organizations…
         </div>
         <div className="text-xs text-zombie-muted leading-relaxed">
           The model is reading each candidate's funding totals, signal types, government-revenue

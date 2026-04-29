@@ -6,6 +6,7 @@ import { cached } from '@/lib/cache';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 export const maxDuration = 60;
+const CANDIDATE_LIMIT = 12;
 
 /**
  * Autonomous-investigator endpoint.
@@ -28,7 +29,9 @@ export async function GET(_req: NextRequest) {
     return new Response(`Anthropic key missing: ${e.message}`, { status: 500 });
   }
 
-  const candidates = await cached('agent:candidates', 600, () => getZombies({ limit: 30 }));
+  const candidates = await cached(`agent:candidates:${CANDIDATE_LIMIT}`, 600, () =>
+    getZombies({ limit: CANDIDATE_LIMIT })
+  );
 
   // Compact slate — just the comparable signals. Skips per-candidate grant
   // detail to stay within Vercel's 60s function budget on cold start; the
@@ -69,7 +72,7 @@ export async function GET(_req: NextRequest) {
       try {
         const llmStream = anthropic.messages.stream({
           model: MODEL,
-          max_tokens: 1100,
+          max_tokens: 900,
           system: `You are an autonomous accountability investigator for Canadian taxpayers, in CBC investigative-journalism voice.
 
 You will be given a slate of ${enriched.length} candidate organizations from open Canadian government data, each flagged as a "zombie recipient" (received public funding then ceased meaningful operations). For each candidate you receive: name, province, total public funding, federal and Alberta totals, CRA government-revenue share, last filed T3010 year, most recent federal grant date, Alberta registry status, the deterministic signal label, and (where available) the largest single grant on record.
