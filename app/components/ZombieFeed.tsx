@@ -136,7 +136,7 @@ export function ZombieFeed() {
         {!loading && !error && hasMore && (
           <button
             onClick={() => setPageCount((p) => p + 1)}
-            className="w-full mt-2 flex items-center justify-center gap-2 bg-zombie-card border border-zombie-border rounded-xl py-3 text-sm text-zombie-muted hover:text-white active:scale-[0.99] transition-transform"
+            className="w-full mt-2 flex items-center justify-center gap-2 bg-zombie-card border border-zombie-border rounded-xl py-3 text-sm text-zombie-muted hover:text-zombie-fg active:scale-[0.99] transition-transform"
           >
             <ChevronDown size={16} />
             Show next {Math.min(PAGE_SIZE, filtered.length - visible.length)} of{' '}

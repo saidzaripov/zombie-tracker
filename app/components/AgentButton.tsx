@@ -10,16 +10,16 @@ export function AgentButton({ onClick }: { onClick: () => void }) {
       >
         <div className="flex items-center gap-3 text-left">
           <div className="rounded-full bg-fuchsia-500/20 p-2">
-            <Sparkles size={16} className="text-fuchsia-300" />
+            <Sparkles size={16} className="text-fuchsia-500" />
           </div>
           <div>
-            <div className="text-sm font-semibold text-white">Let the AI investigate</div>
-            <div className="text-[11px] text-fuchsia-200/70 leading-tight">
+            <div className="text-sm font-semibold text-zombie-fg">Let the AI investigate</div>
+            <div className="text-[11px] text-zombie-muted leading-tight">
               Pick a candidate, explain why, write the case
             </div>
           </div>
         </div>
-        <div className="text-fuchsia-300 text-xs uppercase tracking-wider font-semibold">
+        <div className="text-fuchsia-500 text-xs uppercase tracking-wider font-semibold">
           Run
         </div>
       </button>

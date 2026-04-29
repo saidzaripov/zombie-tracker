@@ -54,12 +54,28 @@ export function HeaderTicker({ onAbout }: { onAbout: () => void }) {
               />
               <span className="absolute -top-0.5 -right-0.5 inline-block w-1.5 h-1.5 rounded-full bg-zombie-accent pulse-red" />
             </div>
-            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-zombie-fg">
-              Zombie Tracker
-            </span>
-            <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-fuchsia-400/80 ml-1 px-1.5 py-0.5 rounded border border-fuchsia-500/30 bg-fuchsia-500/5">
-              AI
-            </span>
+            <div className="flex flex-col leading-none">
+              <div className="flex items-center gap-1.5">
+                <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-zombie-fg">
+                  Zombie Tracker
+                </span>
+                <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-fuchsia-400 ml-0.5 px-1.5 py-0.5 rounded border border-fuchsia-500/40 bg-fuchsia-500/10">
+                  AI
+                </span>
+              </div>
+              <span className="text-[9px] text-zombie-muted mt-1 font-mono">
+                built by{' '}
+                <a
+                  href="https://www.linkedin.com/in/said-zaripov7/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-zombie-fg/80 hover:text-zombie-fg underline-offset-2 hover:underline"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Said Zaripov
+                </a>
+              </span>
+            </div>
           </div>
           <div className="flex items-center gap-1">
             <button
@@ -76,7 +92,7 @@ export function HeaderTicker({ onAbout }: { onAbout: () => void }) {
 
         {/* hero */}
         <div className="relative">
-          <div className="text-[10px] uppercase tracking-[0.18em] text-zombie-muted mb-1.5">
+          <div className="text-[10px] uppercase tracking-[0.18em] text-zombie-fg/70 mb-1.5">
             Public dollars to Canadian charities that went silent
           </div>
           <div className="text-[44px] sm:text-[52px] leading-none font-bold tabular-nums text-zombie-fg">

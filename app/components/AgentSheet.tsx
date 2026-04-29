@@ -154,14 +154,14 @@ function AgentInner({ onClose }: { onClose: () => void }) {
             <div className="text-xs uppercase tracking-wider text-fuchsia-400 font-semibold flex items-center gap-1.5">
               <Sparkles size={12} /> Autonomous Investigation
             </div>
-            <h2 className="text-lg font-semibold text-white truncate">
+            <h2 className="text-lg font-semibold text-zombie-fg truncate">
               {selection ? selection.candidate.name : 'AI is reviewing candidates…'}
             </h2>
           </div>
           <button
             onClick={onClose}
             aria-label="Close"
-            className="p-2 -mr-2 text-zombie-muted hover:text-white"
+            className="p-2 -mr-2 text-zombie-muted hover:text-zombie-fg"
           >
             <X size={22} />
           </button>
@@ -182,7 +182,7 @@ function AgentInner({ onClose }: { onClose: () => void }) {
               <SelectionCard selection={selection} reasoning={reasoning} />
 
               <Section title="AI Investigation" subtitle={streaming ? 'Writing now…' : null}>
-                <div className="text-[15px] leading-relaxed text-neutral-200 whitespace-pre-wrap">
+                <div className="text-[15px] leading-relaxed text-zombie-fg whitespace-pre-wrap">
                   {narrative ||
                     (streaming ? (
                       <span className="text-zombie-muted">Generating forensic narrative…</span>
@@ -198,7 +198,7 @@ function AgentInner({ onClose }: { onClose: () => void }) {
                     </div>
                     <ul className="space-y-1.5">
                       {flags.map((f, i) => (
-                        <li key={i} className="text-sm text-neutral-300 flex gap-2">
+                        <li key={i} className="text-sm text-zombie-fg flex gap-2">
                           <span className="text-zombie-accent shrink-0">▸</span>
                           <span>{f}</span>
                         </li>
@@ -230,7 +230,7 @@ function AgentInner({ onClose }: { onClose: () => void }) {
                           </div>
                         )}
                         {g.purpose && (
-                          <div className="text-sm text-neutral-300 mt-1 line-clamp-2">
+                          <div className="text-sm text-zombie-fg mt-1 line-clamp-2">
                             {g.purpose}
                           </div>
                         )}
@@ -273,22 +273,22 @@ function ReviewingState({ start }: { start: StartEvent | null }) {
   return (
     <div className="space-y-4">
       <div className="bg-fuchsia-500/10 border border-fuchsia-500/30 rounded-xl p-4">
-        <div className="flex items-center gap-2 text-fuchsia-300 text-sm font-semibold mb-3">
+        <div className="flex items-center gap-2 text-fuchsia-500 text-sm font-semibold mb-3">
           <ScanSearch size={14} className="animate-pulse" />
           AI is reviewing candidate organizations…
         </div>
 
         {names.length > 0 && current ? (
           <div className="space-y-3">
-            <div className="text-[11px] uppercase tracking-wider text-fuchsia-300/70 font-mono">
+            <div className="text-[11px] uppercase tracking-wider text-fuchsia-500/70 font-mono">
               Reading candidate {cursor + 1} of {names.length}
             </div>
             <div className="bg-zombie-bg/60 border border-fuchsia-500/20 rounded-lg p-3 transition-all duration-200">
-              <div className="text-base font-semibold text-white truncate">
+              <div className="text-base font-semibold text-zombie-fg truncate">
                 {current.name}
               </div>
               <div className="flex items-center gap-3 mt-1 text-xs text-zombie-muted">
-                <span className="font-mono text-fuchsia-300/80">
+                <span className="font-mono text-fuchsia-500/80">
                   {current.province ?? '—'}
                 </span>
                 <span>·</span>
@@ -303,7 +303,7 @@ function ReviewingState({ start }: { start: StartEvent | null }) {
                 <div
                   key={i}
                   className={`h-1.5 rounded-full transition-colors ${
-                    i <= cursor ? 'bg-fuchsia-400' : 'bg-zombie-border'
+                    i <= cursor ? 'bg-fuchsia-500' : 'bg-zombie-border'
                   }`}
                 />
               ))}
@@ -341,10 +341,10 @@ function SelectionCard({
         <div className="text-[10px] uppercase tracking-wider text-fuchsia-400 font-semibold mb-1 flex items-center gap-1">
           <Sparkles size={10} /> AI selected
         </div>
-        <h3 className="text-base font-semibold text-white">{selection.headline}</h3>
+        <h3 className="text-base font-semibold text-zombie-fg">{selection.headline}</h3>
       </div>
       {reasoning && (
-        <div className="text-[13px] leading-relaxed text-fuchsia-100/80 italic border-l-2 border-fuchsia-500/40 pl-3">
+        <div className="text-[13px] leading-relaxed text-zombie-fg/85 italic border-l-2 border-fuchsia-500/50 pl-3">
           {reasoning}
         </div>
       )}
@@ -380,7 +380,7 @@ function Stat({ label, value, accent }: { label: string; value: string; accent?:
       <div className="text-[10px] uppercase tracking-wider text-zombie-muted">{label}</div>
       <div
         className={`text-sm font-semibold mt-0.5 tabular-nums ${
-          accent ? 'text-zombie-accent' : 'text-white'
+          accent ? 'text-zombie-accent' : 'text-zombie-fg'
         }`}
       >
         {value}
@@ -401,7 +401,7 @@ function Section({
   return (
     <section>
       <div className="flex items-baseline gap-2 mb-2">
-        <h3 className="text-sm font-semibold text-white uppercase tracking-wider">{title}</h3>
+        <h3 className="text-sm font-semibold text-zombie-fg uppercase tracking-wider">{title}</h3>
         {subtitle && <span className="text-xs text-zombie-muted">{subtitle}</span>}
       </div>
       {children}

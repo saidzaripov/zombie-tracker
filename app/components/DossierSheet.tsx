@@ -124,14 +124,14 @@ function DossierInner({ zombie, onClose }: { zombie: Zombie; onClose: () => void
             <div className="text-xs uppercase tracking-wider text-zombie-accent font-semibold">
               Forensic Dossier
             </div>
-            <h2 className="text-lg font-semibold text-white truncate">{zombie.canonical_name}</h2>
+            <h2 className="text-lg font-semibold text-zombie-fg truncate">{zombie.canonical_name}</h2>
           </div>
           <div className="flex items-center gap-1 shrink-0">
             <ShareButton zombie={zombie} narrative={narrative} />
             <button
               onClick={onClose}
               aria-label="Close"
-              className="p-2 -mr-2 text-zombie-muted hover:text-white"
+              className="p-2 -mr-2 text-zombie-muted hover:text-zombie-fg"
             >
               <X size={22} />
             </button>
@@ -150,7 +150,7 @@ function DossierInner({ zombie, onClose }: { zombie: Zombie; onClose: () => void
               </div>
             )}
             {!streamError && (
-              <div className="text-[15px] leading-relaxed text-neutral-200 whitespace-pre-wrap">
+              <div className="text-[15px] leading-relaxed text-zombie-fg whitespace-pre-wrap">
                 {narrative || (streaming ? <span className="text-zombie-muted">Connecting to model…</span> : null)}
                 {streaming && narrative && <span className="inline-block w-2 h-4 -mb-0.5 ml-0.5 bg-zombie-accent animate-pulse" />}
               </div>
@@ -162,7 +162,7 @@ function DossierInner({ zombie, onClose }: { zombie: Zombie; onClose: () => void
                 </div>
                 <ul className="space-y-1.5">
                   {flags.map((f, i) => (
-                    <li key={i} className="text-sm text-neutral-300 flex gap-2">
+                    <li key={i} className="text-sm text-zombie-fg flex gap-2">
                       <span className="text-zombie-accent shrink-0">▸</span>
                       <span>{f}</span>
                     </li>
@@ -186,7 +186,7 @@ function DossierInner({ zombie, onClose }: { zombie: Zombie; onClose: () => void
                         <Building2 size={12} /> {g.department}
                       </div>
                     )}
-                    {g.purpose && <div className="text-sm text-neutral-300 mt-1 line-clamp-2">{g.purpose}</div>}
+                    {g.purpose && <div className="text-sm text-zombie-fg mt-1 line-clamp-2">{g.purpose}</div>}
                     {g.date && (
                       <div className="text-xs text-zombie-muted mt-1 flex items-center gap-1.5">
                         <Calendar size={12} /> {shortDate(g.date)}
@@ -243,7 +243,7 @@ function ShareButton({ zombie, narrative }: { zombie: Zombie; narrative: string 
     <button
       onClick={onShare}
       aria-label="Share this dossier"
-      className="p-2 text-zombie-muted hover:text-white"
+      className="p-2 text-zombie-muted hover:text-zombie-fg"
     >
       {copied ? <Check size={18} className="text-emerald-400" /> : <Share2 size={18} />}
     </button>
@@ -275,7 +275,7 @@ function Stat({ label, value, accent }: { label: string; value: string; accent?:
   return (
     <div className="bg-zombie-card border border-zombie-border rounded-lg p-3">
       <div className="text-[10px] uppercase tracking-wider text-zombie-muted">{label}</div>
-      <div className={`text-lg font-semibold mt-0.5 tabular-nums ${accent ? 'text-zombie-accent' : 'text-white'}`}>
+      <div className={`text-lg font-semibold mt-0.5 tabular-nums ${accent ? 'text-zombie-accent' : 'text-zombie-fg'}`}>
         {value}
       </div>
     </div>
@@ -294,7 +294,7 @@ function Section({
   return (
     <section>
       <div className="flex items-baseline gap-2 mb-2">
-        <h3 className="text-sm font-semibold text-white uppercase tracking-wider">{title}</h3>
+        <h3 className="text-sm font-semibold text-zombie-fg uppercase tracking-wider">{title}</h3>
         {subtitle && <span className="text-xs text-zombie-muted">{subtitle}</span>}
       </div>
       {children}

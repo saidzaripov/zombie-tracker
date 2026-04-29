@@ -167,7 +167,7 @@ function Chip({
 }) {
   const activeClasses =
     tone === 'signal'
-      ? 'bg-fuchsia-500/15 text-fuchsia-200 border-fuchsia-500/40'
+      ? 'bg-fuchsia-500 text-white border-fuchsia-500'
       : 'bg-zombie-accent text-white border-zombie-accent';
   return (
     <button
@@ -175,7 +175,7 @@ function Chip({
       className={`shrink-0 text-sm px-3 py-1.5 rounded-full border transition-colors ${
         active
           ? activeClasses
-          : 'bg-zombie-card text-zombie-muted border-zombie-border hover:text-white'
+          : 'bg-zombie-card text-zombie-muted border-zombie-border hover:text-zombie-fg'
       }`}
     >
       {label}

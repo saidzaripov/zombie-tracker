@@ -32,14 +32,14 @@ export function MethodologySheet({
                 <div className="text-xs uppercase tracking-wider text-zombie-accent font-semibold">
                   How it works
                 </div>
-                <h2 className="text-lg font-semibold text-white">
+                <h2 className="text-lg font-semibold text-zombie-fg">
                   Methodology · data · trade-offs
                 </h2>
               </div>
               <button
                 onClick={onClose}
                 aria-label="Close"
-                className="p-2 -mr-2 text-zombie-muted hover:text-white"
+                className="p-2 -mr-2 text-zombie-muted hover:text-zombie-fg"
               >
                 <X size={22} />
               </button>
@@ -214,8 +214,8 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="text-[14px] leading-relaxed text-neutral-200">
-      <h3 className="text-xs uppercase tracking-wider text-white font-semibold mb-2 flex items-center gap-1.5">
+    <section className="text-[14px] leading-relaxed text-zombie-fg">
+      <h3 className="text-xs uppercase tracking-wider text-zombie-fg font-semibold mb-2 flex items-center gap-1.5">
         {icon && <span className="text-zombie-accent">{icon}</span>}
         {title}
       </h3>
