@@ -1,10 +1,47 @@
 import Anthropic from '@anthropic-ai/sdk';
+import fs from 'node:fs';
+import path from 'node:path';
 
 let client: Anthropic | null = null;
 
+/**
+ * Read ANTHROPIC_API_KEY with a fallback that bypasses Next.js's dotenv parser.
+ *
+ * Some Anthropic keys contain `$` sequences that dotenv-expand interprets as
+ * variable references, silently truncating the value. Quoting strategies vary
+ * by Next.js version, so we read .env.local directly as a fallback.
+ */
+function readApiKey(): string | null {
+  const env = process.env.ANTHROPIC_API_KEY?.trim();
+  if (env) return env;
+
+  // Fallback: parse .env.local directly. Cwd is the project root in dev/prod.
+  try {
+    const envPath = path.join(process.cwd(), '.env.local');
+    if (!fs.existsSync(envPath)) return null;
+    const content = fs.readFileSync(envPath, 'utf8');
+    for (const raw of content.split('\n')) {
+      const line = raw.trim();
+      if (!line || line.startsWith('#')) continue;
+      const m = line.match(/^ANTHROPIC_API_KEY\s*=\s*(.*)$/);
+      if (!m) continue;
+      let value = m[1].trim();
+      // Strip wrapping single OR double quotes if present
+      if ((value.startsWith('"') && value.endsWith('"')) ||
+          (value.startsWith("'") && value.endsWith("'"))) {
+        value = value.slice(1, -1);
+      }
+      return value || null;
+    }
+  } catch {
+    // ignore — fall through to null
+  }
+  return null;
+}
+
 export function getAnthropic(): Anthropic {
   if (!client) {
-    const apiKey = process.env.ANTHROPIC_API_KEY;
+    const apiKey = readApiKey();
     if (!apiKey) throw new Error('ANTHROPIC_API_KEY not set');
     client = new Anthropic({ apiKey });
   }
@@ -12,6 +49,37 @@ export function getAnthropic(): Anthropic {
 }
 
 export const MODEL = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6';
+
+export const INVESTIGATOR_SYSTEM_PROMPT = `You are an autonomous accountability investigator. You will be handed a slate of candidate organizations from a Canadian public-funding dataset and you must do three things, in order, with no user guidance:
+
+1. **Pick the single case the public most needs to know about right now.** Don't pick the largest dollar amount by default. Pick the one with the most striking, most teachable, most defensible accountability story — the one a journalist would lead a national story with. Look for unusual patterns: federal money flowing AFTER a charity stopped reporting, near-total public dependency on a single department, signal combinations that suggest cessation rather than amalgamation.
+
+2. **Explain why you picked that one.** In 2–3 sentences. Name the specific data point that made you choose it.
+
+3. **Write a forensic narrative on the chosen case** using only the structured data block I will provide below for that entity. Same format and rules as a normal investigation: 180–230 words, 3 paragraphs, cite specific dollar amounts and dates, no speculation about intent. Then list 3–5 red flags.
+
+# Hard rules
+- You may only pick from the candidate slate I give you.
+- For the narrative, use ONLY numbers, names, and dates that appear in the data block for the chosen entity.
+- If the strongest case still looks like an amalgamation/successor entity (regional health authority, Crown corporation), say so explicitly in your reasoning AND in the narrative — do not imply wrongdoing.
+- Output the EXACT structure below. Nothing before, nothing after.
+
+# Output format
+
+<selection>
+{"entity_id": <integer>, "headline": "<one short sentence summarizing the chosen case>"}
+</selection>
+<reasoning>
+<2-3 sentences explaining why you chose this case over the others. Name the specific data point.>
+</reasoning>
+<narrative>
+<3 paragraphs, 180-230 words, citing specific dollar amounts, dates, departments. Same style as a CBC investigative piece. No headings inside.>
+</narrative>
+<red_flags>
+- <one specific data point, ≤15 words>
+- <one specific data point, ≤15 words>
+- <3-5 bullets total>
+</red_flags>`;
 
 export const DOSSIER_SYSTEM_PROMPT = `You are a forensic accountability journalist writing for Canadian taxpayers, in the voice of a CBC investigative reporter. Your audience opens this dossier on a phone and reads it in under 30 seconds.
 

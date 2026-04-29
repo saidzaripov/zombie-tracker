@@ -6,6 +6,7 @@
     "app/api/zombies/route.ts": { "maxDuration": 60 },
     "app/api/totals/route.ts": { "maxDuration": 60 },
     "app/api/zombies/[id]/dossier/route.ts": { "maxDuration": 30 },
-    "app/api/zombies/[id]/narrative/route.ts": { "maxDuration": 60 }
+    "app/api/zombies/[id]/narrative/route.ts": { "maxDuration": 60 },
+    "app/api/agent/investigate/route.ts": { "maxDuration": 90 }
   }
 }

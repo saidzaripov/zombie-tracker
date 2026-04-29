@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { ZombieCard } from './ZombieCard';
 import { DossierSheet } from './DossierSheet';
 import { FilterChips, type FilterState } from './FilterChips';
+import { AgentButton } from './AgentButton';
+import { AgentSheet } from './AgentSheet';
 import type { Zombie } from '@/lib/types';
 
 export function ZombieFeed() {
@@ -10,6 +12,7 @@ export function ZombieFeed() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Zombie | null>(null);
+  const [agentOpen, setAgentOpen] = useState(false);
   const [filter, setFilter] = useState<FilterState>({
     source: 'all',
     province: null,
@@ -45,6 +48,7 @@ export function ZombieFeed() {
   return (
     <>
       <FilterChips state={filter} onChange={setFilter} />
+      <AgentButton onClick={() => setAgentOpen(true)} />
 
       <div className="px-4 py-3 space-y-2 pb-24">
         {loading && (
@@ -70,6 +74,7 @@ export function ZombieFeed() {
       </div>
 
       <DossierSheet zombie={selected} onClose={() => setSelected(null)} />
+      <AgentSheet open={agentOpen} onClose={() => setAgentOpen(false)} />
     </>
   );
 }
