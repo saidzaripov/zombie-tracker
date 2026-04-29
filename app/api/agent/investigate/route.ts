@@ -6,7 +6,7 @@ import { cached } from '@/lib/cache';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 export const maxDuration = 60;
-const CANDIDATE_LIMIT = 12;
+const CANDIDATE_LIMIT = 8;
 
 /**
  * Autonomous-investigator endpoint.
@@ -71,8 +71,8 @@ export async function GET(_req: NextRequest) {
 
       try {
         const llmStream = anthropic.messages.stream({
-          model: MODEL,
-          max_tokens: 900,
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 750,
           system: `You are an autonomous accountability investigator for Canadian taxpayers, in CBC investigative-journalism voice.
 
 You will be given a slate of ${enriched.length} candidate organizations from open Canadian government data, each flagged as a "zombie recipient" (received public funding then ceased meaningful operations). For each candidate you receive: name, province, total public funding, federal and Alberta totals, CRA government-revenue share, last filed T3010 year, most recent federal grant date, Alberta registry status, the deterministic signal label, and (where available) the largest single grant on record.
