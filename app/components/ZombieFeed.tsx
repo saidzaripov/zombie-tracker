@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { ZombieCard } from './ZombieCard';
 import { DossierSheet } from './DossierSheet';
-import { FilterChips, type FilterState } from './FilterChips';
+import { FilterChips, DEFAULT_FILTER, type FilterState } from './FilterChips';
 import { AgentButton } from './AgentButton';
 import { AgentSheet } from './AgentSheet';
 import { SearchBar } from './SearchBar';
@@ -21,12 +21,7 @@ export function ZombieFeed() {
   const [agentOpen, setAgentOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [pageCount, setPageCount] = useState(1);
-  const [filter, setFilter] = useState<FilterState>({
-    source: 'all',
-    province: null,
-    minFunding: 100_000,
-    signal: 'all',
-  });
+  const [filter, setFilter] = useState<FilterState>(DEFAULT_FILTER);
 
   useEffect(() => {
     setLoading(true);

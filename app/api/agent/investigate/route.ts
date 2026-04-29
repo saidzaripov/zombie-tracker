@@ -168,7 +168,16 @@ export async function GET(_req: NextRequest) {
         controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
       };
 
-      send('start', { candidates: enriched.length, snapshot_date: SNAPSHOT_DATE });
+      send('start', {
+        candidates: enriched.length,
+        snapshot_date: SNAPSHOT_DATE,
+        names: enriched.map((c) => ({
+          entity_id: c.entity_id,
+          name: c.name,
+          province: c.province,
+          total_funding: c.total_funding,
+        })),
+      });
 
       try {
         const llmStream = anthropic.messages.stream({

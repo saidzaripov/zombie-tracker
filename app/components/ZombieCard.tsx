@@ -4,6 +4,7 @@ import { ChevronRight, Skull } from 'lucide-react';
 import type { Zombie } from '@/lib/types';
 import { formatMoney } from '../lib-client/format';
 import { Lifeline } from './Lifeline';
+import { Monogram } from './Monogram';
 
 const SIGNAL_COLORS: Record<string, string> = {
   ab_dissolved: 'bg-red-500/15 text-red-400 border-red-500/30',
@@ -40,14 +41,21 @@ export function ZombieCard({
       onClick={onClick}
       className="w-full text-left bg-zombie-card border border-zombie-border rounded-xl p-4 active:scale-[0.99] transition-transform"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-baseline gap-2 min-w-0">
-          <span className="text-zombie-muted text-xs tabular-nums w-6 shrink-0">#{rank}</span>
-          <h3 className="text-base font-semibold text-white leading-snug line-clamp-2">
-            {zombie.canonical_name}
-          </h3>
+      <div className="flex items-start gap-3">
+        <Monogram name={zombie.canonical_name} />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <div className="text-[10px] uppercase tracking-wider text-zombie-muted font-mono">
+                #{rank}
+              </div>
+              <h3 className="text-base font-semibold text-white leading-snug line-clamp-2">
+                {zombie.canonical_name}
+              </h3>
+            </div>
+            <ChevronRight className="text-zombie-muted shrink-0 mt-1" size={18} />
+          </div>
         </div>
-        <ChevronRight className="text-zombie-muted shrink-0 mt-0.5" size={18} />
       </div>
 
       <div className="flex items-baseline gap-2 mt-3">
@@ -75,11 +83,13 @@ export function ZombieCard({
             {s}
           </span>
         ))}
-        {zombie.cra_govt_share_pct != null && zombie.cra_govt_share_pct >= 50 && (
-          <span className="text-[11px] px-2 py-0.5 rounded-full border border-yellow-500/30 text-yellow-400 bg-yellow-500/10">
-            {Math.round(zombie.cra_govt_share_pct)}% public revenue
-          </span>
-        )}
+        {zombie.cra_govt_share_pct != null &&
+          zombie.cra_govt_share_pct >= 50 &&
+          zombie.signal !== 'high_govt_dependency' && (
+            <span className="text-[11px] px-2 py-0.5 rounded-full border border-yellow-500/30 text-yellow-400 bg-yellow-500/10">
+              {Math.round(zombie.cra_govt_share_pct)}% public revenue
+            </span>
+          )}
       </div>
 
       <Lifeline lastFiledYear={zombie.cra_latest_year} abStatus={zombie.ab_status} />

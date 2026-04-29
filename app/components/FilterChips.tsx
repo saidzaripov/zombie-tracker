@@ -1,5 +1,7 @@
 'use client';
 
+import { X } from 'lucide-react';
+
 export type SignalKey =
   | 'all'
   | 'dissolved'
@@ -16,6 +18,13 @@ export type FilterState = {
 
 const PROVINCES = ['AB', 'BC', 'ON', 'QC', 'SK', 'MB', 'NS', 'NB', 'NL', 'YT'];
 
+export const DEFAULT_FILTER: FilterState = {
+  source: 'all',
+  province: null,
+  minFunding: 100_000,
+  signal: 'all',
+};
+
 export function FilterChips({
   state,
   onChange,
@@ -23,9 +32,25 @@ export function FilterChips({
   state: FilterState;
   onChange: (next: FilterState) => void;
 }) {
+  const hasActive =
+    state.source !== 'all' ||
+    state.province !== null ||
+    state.minFunding !== 100_000 ||
+    state.signal !== 'all';
+
   return (
     <div className="sticky top-[150px] z-20 bg-zombie-bg/95 backdrop-blur border-b border-zombie-border">
       <div className="flex gap-2 px-4 py-2 overflow-x-auto no-scrollbar">
+        {hasActive && (
+          <button
+            onClick={() => onChange(DEFAULT_FILTER)}
+            className="shrink-0 inline-flex items-center gap-1 text-sm px-2.5 py-1.5 rounded-full border border-zombie-accent/40 bg-zombie-accent/10 text-zombie-accent hover:bg-zombie-accent/20 transition-colors"
+            aria-label="Clear all filters"
+          >
+            <X size={12} /> Clear
+          </button>
+        )}
+
         {/* Source */}
         <Chip
           active={state.source === 'all'}
