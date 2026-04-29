@@ -2,15 +2,33 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, AlertTriangle, Sparkles, Building2, Calendar } from 'lucide-react';
-import type { Zombie, DossierData } from '@/lib/types';
 import { formatMoney, shortDate } from '../lib-client/format';
+
+type AgentCandidate = {
+  entity_id: number;
+  name: string;
+  province: string | null;
+  total_funding: number;
+  fed_total: number;
+  ab_total: number;
+  cra_govt_share_pct: number | null;
+  cra_latest_year: number | null;
+  fed_latest_grant: string | null;
+  ab_registry_status: string | null;
+  signal_label: string;
+  top_grants: Array<{
+    source: string;
+    amount: number;
+    date: string | null;
+    department: string | null;
+    purpose: string | null;
+  }>;
+};
 
 type SelectionEvent = {
   entity_id: number;
   headline: string;
-  reasoning: string;
-  zombie: Zombie;
-  dossier: DossierData;
+  candidate: AgentCandidate;
 };
 
 export function AgentSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -18,8 +36,10 @@ export function AgentSheet({ open, onClose }: { open: boolean; onClose: () => vo
 }
 
 function parseSections(text: string) {
+  const reasoningMatch = text.match(/<reasoning>([\s\S]*?)(?:<\/reasoning>|$)/);
   const narrativeMatch = text.match(/<narrative>([\s\S]*?)(?:<\/narrative>|$)/);
   const flagsMatch = text.match(/<red_flags>([\s\S]*?)(?:<\/red_flags>|$)/);
+  const reasoning = reasoningMatch ? reasoningMatch[1].trim() : '';
   const narrative = narrativeMatch ? narrativeMatch[1].trim() : '';
   const flagsRaw = flagsMatch ? flagsMatch[1].trim() : '';
   const flags = flagsRaw
@@ -27,7 +47,7 @@ function parseSections(text: string) {
     .map((l) => l.trim())
     .filter((l) => l.startsWith('-'))
     .map((l) => l.replace(/^-\s*/, ''));
-  return { narrative, flags };
+  return { reasoning, narrative, flags };
 }
 
 function AgentInner({ onClose }: { onClose: () => void }) {
@@ -97,7 +117,7 @@ function AgentInner({ onClose }: { onClose: () => void }) {
     };
   }, []);
 
-  const { narrative, flags } = useMemo(() => parseSections(narrativeRaw), [narrativeRaw]);
+  const { reasoning, narrative, flags } = useMemo(() => parseSections(narrativeRaw), [narrativeRaw]);
 
   return (
     <motion.div
@@ -121,7 +141,7 @@ function AgentInner({ onClose }: { onClose: () => void }) {
               <Sparkles size={12} /> Autonomous Investigation
             </div>
             <h2 className="text-lg font-semibold text-white truncate">
-              {selection ? selection.zombie.canonical_name : 'AI is reviewing 30 candidates…'}
+              {selection ? selection.candidate.name : 'AI is reviewing 30 candidates…'}
             </h2>
           </div>
           <button
@@ -145,7 +165,7 @@ function AgentInner({ onClose }: { onClose: () => void }) {
 
           {selection && (
             <>
-              <SelectionCard selection={selection} />
+              <SelectionCard selection={selection} reasoning={reasoning} />
 
               <Section title="AI Investigation" subtitle={streaming ? 'Writing now…' : null}>
                 <div className="text-[15px] leading-relaxed text-neutral-200 whitespace-pre-wrap">
@@ -174,10 +194,10 @@ function AgentInner({ onClose }: { onClose: () => void }) {
                 )}
               </Section>
 
-              <Section title="Top grants">
-                {selection.dossier.topGrants?.length ? (
+              {selection.candidate.top_grants && selection.candidate.top_grants.length > 0 && (
+                <Section title="Largest grant on record">
                   <div className="space-y-2">
-                    {selection.dossier.topGrants.map((g, i) => (
+                    {selection.candidate.top_grants.map((g, i) => (
                       <div
                         key={i}
                         className="bg-zombie-card border border-zombie-border rounded-lg p-3"
@@ -208,10 +228,8 @@ function AgentInner({ onClose }: { onClose: () => void }) {
                       </div>
                     ))}
                   </div>
-                ) : (
-                  <div className="text-sm text-zombie-muted">No itemized grants linked.</div>
-                )}
-              </Section>
+                </Section>
+              )}
 
               <div className="text-[10px] text-zombie-muted leading-relaxed pt-2 border-t border-zombie-border">
                 The AI autonomously selected this case from 30 candidates. Picker, narrative,
@@ -250,8 +268,14 @@ function ReviewingState() {
   );
 }
 
-function SelectionCard({ selection }: { selection: SelectionEvent }) {
-  const z = selection.zombie;
+function SelectionCard({
+  selection,
+  reasoning,
+}: {
+  selection: SelectionEvent;
+  reasoning: string;
+}) {
+  const c = selection.candidate;
   return (
     <div className="bg-fuchsia-500/10 border border-fuchsia-500/30 rounded-xl p-4 space-y-3">
       <div>
@@ -260,24 +284,32 @@ function SelectionCard({ selection }: { selection: SelectionEvent }) {
         </div>
         <h3 className="text-base font-semibold text-white">{selection.headline}</h3>
       </div>
-      <div className="text-[13px] leading-relaxed text-fuchsia-100/80 italic border-l-2 border-fuchsia-500/40 pl-3">
-        {selection.reasoning}
-      </div>
+      {reasoning && (
+        <div className="text-[13px] leading-relaxed text-fuchsia-100/80 italic border-l-2 border-fuchsia-500/40 pl-3">
+          {reasoning}
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-2 pt-1">
-        <Stat label="Total public $" value={formatMoney(z.total_funding, { compact: true })} accent />
-        <Stat label="Federal" value={formatMoney(z.fed_total, { compact: true })} />
-        <Stat label="Alberta" value={formatMoney(z.ab_total, { compact: true })} />
+        <Stat
+          label="Total public $"
+          value={formatMoney(c.total_funding, { compact: true })}
+          accent
+        />
+        <Stat label="Federal" value={formatMoney(c.fed_total, { compact: true })} />
+        <Stat label="Alberta" value={formatMoney(c.ab_total, { compact: true })} />
         <Stat
           label="Last T3010 filed"
-          value={z.cra_latest_year ? String(z.cra_latest_year) : '—'}
+          value={c.cra_latest_year ? String(c.cra_latest_year) : '—'}
         />
-        {z.cra_govt_share_pct != null && (
+        {c.cra_govt_share_pct != null && (
           <Stat
             label="Public share of revenue"
-            value={`${Math.round(z.cra_govt_share_pct)}%`}
+            value={`${Math.round(c.cra_govt_share_pct)}%`}
           />
         )}
-        {z.ab_status && <Stat label="AB registry" value={z.ab_status} />}
+        {c.ab_registry_status && (
+          <Stat label="AB registry" value={c.ab_registry_status} />
+        )}
       </div>
     </div>
   );
