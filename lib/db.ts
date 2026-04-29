@@ -14,8 +14,8 @@ export const pool =
     idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: 8_000,
     keepAlive: true,
-    statement_timeout: 25_000,
-    query_timeout: 25_000,
+    statement_timeout: 8_000,
+    query_timeout: 8_000,
   });
 
 if (process.env.NODE_ENV !== 'production') global.__pgPool = pool;
