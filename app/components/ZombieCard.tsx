@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ChevronRight, Skull } from 'lucide-react';
 import type { Zombie } from '@/lib/types';
 import { formatMoney } from '../lib-client/format';
+import { Lifeline } from './Lifeline';
 
 const SIGNAL_COLORS: Record<string, string> = {
   ab_dissolved: 'bg-red-500/15 text-red-400 border-red-500/30',
@@ -80,6 +81,8 @@ export function ZombieCard({
           </span>
         )}
       </div>
+
+      <Lifeline lastFiledYear={zombie.cra_latest_year} abStatus={zombie.ab_status} />
     </motion.button>
   );
 }

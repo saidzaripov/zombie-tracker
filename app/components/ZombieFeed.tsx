@@ -25,6 +25,7 @@ export function ZombieFeed() {
     source: 'all',
     province: null,
     minFunding: 100_000,
+    signal: 'all',
   });
 
   useEffect(() => {
@@ -63,15 +64,34 @@ export function ZombieFeed() {
   }, [search]);
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return zombies;
+    let list = zombies;
+
+    // Signal filter
+    if (filter.signal !== 'all') {
+      list = list.filter((z) => {
+        if (filter.signal === 'dissolved') return z.signal === 'ab_dissolved';
+        if (filter.signal === 'struck') return z.signal === 'ab_struck';
+        if (filter.signal === 'stopped_filing') return z.signal === 'stopped_filing';
+        if (filter.signal === 'high_dependency')
+          return z.signal === 'high_govt_dependency' ||
+            (z.cra_govt_share_pct != null && z.cra_govt_share_pct >= 95);
+        return true;
+      });
+    }
+
+    // Search
     const needle = search.trim().toLowerCase();
-    return zombies.filter(
-      (z) =>
-        z.canonical_name.toLowerCase().includes(needle) ||
-        (z.bn_root && z.bn_root.includes(needle)) ||
-        (z.province && z.province.toLowerCase() === needle)
-    );
-  }, [zombies, search]);
+    if (needle) {
+      list = list.filter(
+        (z) =>
+          z.canonical_name.toLowerCase().includes(needle) ||
+          (z.bn_root && z.bn_root.includes(needle)) ||
+          (z.province && z.province.toLowerCase() === needle)
+      );
+    }
+
+    return list;
+  }, [zombies, search, filter.signal]);
 
   const visible = filtered.slice(0, pageCount * PAGE_SIZE);
   const hasMore = filtered.length > visible.length;

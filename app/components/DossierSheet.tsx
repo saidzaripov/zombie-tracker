@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, AlertTriangle, Building2, Calendar, Banknote } from 'lucide-react';
+import { X, AlertTriangle, Building2, Calendar, Share2, Check } from 'lucide-react';
 import type { Zombie, DossierData } from '@/lib/types';
 import { formatMoney, shortDate } from '../lib-client/format';
 
@@ -119,20 +119,23 @@ function DossierInner({ zombie, onClose }: { zombie: Zombie; onClose: () => void
         transition={{ type: 'spring', damping: 30, stiffness: 280 }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-zombie-border shrink-0">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-zombie-border shrink-0 gap-2">
           <div className="min-w-0">
             <div className="text-xs uppercase tracking-wider text-zombie-accent font-semibold">
               Forensic Dossier
             </div>
             <h2 className="text-lg font-semibold text-white truncate">{zombie.canonical_name}</h2>
           </div>
-          <button
-            onClick={onClose}
-            aria-label="Close"
-            className="p-2 -mr-2 text-zombie-muted hover:text-white"
-          >
-            <X size={22} />
-          </button>
+          <div className="flex items-center gap-1 shrink-0">
+            <ShareButton zombie={zombie} narrative={narrative} />
+            <button
+              onClick={onClose}
+              aria-label="Close"
+              className="p-2 -mr-2 text-zombie-muted hover:text-white"
+            >
+              <X size={22} />
+            </button>
+          </div>
         </div>
 
         <div className="overflow-y-auto px-4 py-4 space-y-4 flex-1">
@@ -204,6 +207,46 @@ function DossierInner({ zombie, onClose }: { zombie: Zombie; onClose: () => void
         </div>
       </motion.div>
     </motion.div>
+  );
+}
+
+function ShareButton({ zombie, narrative }: { zombie: Zombie; narrative: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const onShare = async () => {
+    const url = typeof window !== 'undefined' ? window.location.href : '';
+    const headline = `${zombie.canonical_name} — ${formatMoney(zombie.total_funding, { compact: true })} in public funding`;
+    const teaser = narrative ? narrative.split('\n')[0].slice(0, 240) : zombie.signal_label;
+    const shareData = {
+      title: headline,
+      text: `${headline}\n\n${teaser}\n\nFrom Zombie Tracker — Canada's $1.5B accountability gap.`,
+      url,
+    };
+    try {
+      if (typeof navigator !== 'undefined' && 'share' in navigator) {
+        await (navigator as any).share(shareData);
+        return;
+      }
+    } catch {
+      /* user cancelled or share failed — fall through to clipboard */
+    }
+    try {
+      await navigator.clipboard.writeText(`${shareData.text}\n${url}`);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* nothing to do */
+    }
+  };
+
+  return (
+    <button
+      onClick={onShare}
+      aria-label="Share this dossier"
+      className="p-2 text-zombie-muted hover:text-white"
+    >
+      {copied ? <Check size={18} className="text-emerald-400" /> : <Share2 size={18} />}
+    </button>
   );
 }
 
